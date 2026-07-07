@@ -1,0 +1,169 @@
+.app-container {
+  display: flex;
+  height: 100vh;
+  background-color: var(--bg-base);
+}
+
+.sidebar {
+  width: 280px;
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.sidebar-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: white;
+  box-shadow: var(--shadow-glow);
+}
+
+.logo-container h2 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.nav-link.active {
+  background: var(--primary-glow);
+  color: white;
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+.nav-icon {
+  color: inherit;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.logout-btn {
+  color: var(--danger);
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--danger);
+}
+
+/* Header */
+.top-header {
+  margin: 16px 16px 16px 0;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agency-name {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.badge {
+  background: rgba(0, 240, 255, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  color: var(--text-main);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-surface-elevated);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 1px solid var(--border-light);
+}
+
+.content-wrapper {
+  padding: 0 16px 32px 0;
+  height: calc(100vh - 100px);
+  overflow-y: auto;
+}
