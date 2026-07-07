@@ -10,6 +10,12 @@
   display: flex;
   flex-direction: column;
   z-index: 10;
+  background: var(--bg-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .sidebar-header {
@@ -70,14 +76,15 @@
 }
 
 .nav-link:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.03);
   color: var(--text-main);
 }
 
 .nav-link.active {
-  background: var(--primary-glow);
-  color: white;
-  box-shadow: inset 2px 0 0 var(--primary);
+  background: rgba(155, 48, 255, 0.1);
+  color: var(--primary);
+  box-shadow: inset 4px 0 0 var(--primary);
+  font-weight: 600;
 }
 
 .nav-icon {
@@ -106,6 +113,12 @@
   justify-content: space-between;
   align-items: center;
   z-index: 10;
+  background: var(--bg-surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-info {
@@ -153,13 +166,15 @@
 .avatar {
   width: 36px;
   height: 36px;
-  background: var(--bg-surface-elevated);
+  background: linear-gradient(135deg, #a855f7, #7e22ce);
+  color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  border: 1px solid var(--border-light);
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(155, 48, 255, 0.3);
 }
 
 .content-wrapper {

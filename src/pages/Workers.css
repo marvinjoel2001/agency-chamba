@@ -53,7 +53,7 @@
 }
 
 .workers-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .worker-cell {
@@ -66,12 +66,14 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--bg-surface-elevated), var(--border-light));
+  background: linear-gradient(135deg, rgba(155, 48, 255, 0.1), rgba(155, 48, 255, 0.05));
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   font-size: 0.8rem;
+  border: 1px solid rgba(155, 48, 255, 0.2);
 }
 
 .fw-600 { font-weight: 600; }
