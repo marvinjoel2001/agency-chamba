@@ -27,6 +27,13 @@ const jobIcon = L.divIcon({
   iconAnchor: [8, 8],
 });
 
+const workerIcon = L.divIcon({
+  className: '',
+  html: '<div class="map-worker-marker"></div>',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
 const JobsMap = () => {
   const [jobs, setJobs] = useState<ActiveJob[] | null>(null);
   const [workers, setWorkers] = useState<AgencyWorker[]>([]);
@@ -75,6 +82,19 @@ const JobsMap = () => {
     window.addEventListener('agency-realtime', onRealtime);
     return () => window.removeEventListener('agency-realtime', onRealtime);
   }, [loadData]);
+
+  useEffect(() => {
+    const handleOpenOffer = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      const jobId = customEvent.detail;
+      const job = jobs?.find(j => j.id === jobId);
+      if (job) {
+        openOfferModal(job);
+      }
+    };
+    window.addEventListener('open-offer', handleOpenOffer);
+    return () => window.removeEventListener('open-offer', handleOpenOffer);
+  }, [jobs]);
 
   const handleLocateMe = () => {
     if (origin) {
@@ -133,22 +153,46 @@ const JobsMap = () => {
     const source = categoryFilter
       ? jobs?.filter((job) => job.category === categoryFilter)
       : jobs;
-    if (!map || !markers || !source) return;
+    if (!map || !markers) return;
 
     markers.clearLayers();
     const points: [number, number][] = [];
 
-    for (const job of source) {
-      if (job.latitude == null || job.longitude == null) continue;
-      const point: [number, number] = [job.latitude, job.longitude];
+    if (source) {
+      for (const job of source) {
+        if (job.latitude == null || job.longitude == null) continue;
+        const point: [number, number] = [job.latitude, job.longitude];
+        points.push(point);
+
+        L.marker(point, { icon: jobIcon })
+          .bindPopup(
+            `<div class="map-popup">
+              <strong>${job.title}</strong><br/>
+              ${formatMoney(job.budget)} · ${job.category}<br/>
+              <span>${job.address}</span>
+              <button onclick="window.dispatchEvent(new CustomEvent('open-offer', {detail: '${job.id}'}))" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; display: block;">Hacer Oferta</button>
+            </div>`,
+          )
+          .addTo(markers);
+      }
+    }
+
+    for (const worker of workers) {
+      if (worker.latitude == null || worker.longitude == null) continue;
+      const point: [number, number] = [worker.latitude, worker.longitude];
       points.push(point);
 
-      L.marker(point, { icon: jobIcon })
+      let waLink = '';
+      if (worker.phone) {
+        waLink = `<a href="https://wa.me/${worker.phone}" target="_blank" class="btn btn-sm" style="margin-top: 8px; display: block; text-align: center; background: #25D366; color: white;">WhatsApp</a>`;
+      }
+
+      L.marker(point, { icon: workerIcon })
         .bindPopup(
           `<div class="map-popup">
-            <strong>${job.title}</strong><br/>
-            ${formatMoney(job.budget)} · ${job.category}<br/>
-            <span>${job.address}</span>
+            <strong>${fullName(worker.firstName, worker.lastName)}</strong><br/>
+            ⭐ ${worker.averageRating.toFixed(1)} · ${worker.activeJobsCount} trabajos activos<br/>
+            ${waLink}
           </div>`,
         )
         .addTo(markers);
@@ -157,7 +201,7 @@ const JobsMap = () => {
     if (points.length > 0) {
       map.fitBounds(L.latLngBounds(points), { padding: [40, 40], maxZoom: 15 });
     }
-  }, [jobs, categoryFilter]);
+  }, [jobs, categoryFilter, workers]);
 
   const availableWorkers = useMemo(
     () => workers.filter((worker) => !worker.isBlocked),
@@ -215,6 +259,15 @@ const JobsMap = () => {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleWhatsAppWorker = () => {
+    const selectedWorker = availableWorkers.find(w => w.id === offerWorkerId);
+    if (!selectedWorker || !selectedWorker.phone || !offerJob) return;
+    
+    const locUrl = `https://www.google.com/maps/search/?api=1&query=${offerJob.latitude},${offerJob.longitude}`;
+    const text = `Hola ${selectedWorker.firstName}, hay un nuevo trabajo en ${offerJob.address}. Aquí tienes la ubicación exacta: ${locUrl}`;
+    window.open(`https://wa.me/${selectedWorker.phone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
@@ -356,20 +409,34 @@ const JobsMap = () => {
               <form onSubmit={handleSendOffer}>
                 <div className="input-group">
                   <label>Trabajador</label>
-                  <select
-                    className="input-field"
-                    value={offerWorkerId}
-                    onChange={(e) => setOfferWorkerId(e.target.value)}
-                    required
-                  >
-                    {availableWorkers.map((worker) => (
-                      <option key={worker.id} value={worker.id}>
-                        {fullName(worker.firstName, worker.lastName)}
-                        {worker.isAvailable ? '' : ' (no disponible)'}
-                        {` · ★ ${worker.averageRating.toFixed(1)}`}
-                      </option>
-                    ))}
-                  </select>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <select
+                      className="input-field"
+                      style={{ flex: 1 }}
+                      value={offerWorkerId}
+                      onChange={(e) => setOfferWorkerId(e.target.value)}
+                      required
+                    >
+                      {availableWorkers.map((worker) => (
+                        <option key={worker.id} value={worker.id}>
+                          {fullName(worker.firstName, worker.lastName)}
+                          {worker.isAvailable ? '' : ' (no disponible)'}
+                          {` · ★ ${worker.averageRating.toFixed(1)}`}
+                        </option>
+                      ))}
+                    </select>
+                    {availableWorkers.find(w => w.id === offerWorkerId)?.phone && (
+                      <button 
+                        type="button" 
+                        onClick={handleWhatsAppWorker}
+                        className="btn" 
+                        style={{ background: '#25D366', color: 'white', padding: '0 12px', borderColor: '#25D366' }}
+                        title="Enviar ubicación por WhatsApp"
+                      >
+                        WhatsApp
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="input-group">

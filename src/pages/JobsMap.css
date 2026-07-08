@@ -36,6 +36,15 @@
   animation: pulse 2s infinite;
 }
 
+.map-worker-marker {
+  width: 16px;
+  height: 16px;
+  background-color: #10B981; /* Emerald green for workers */
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3), 0 0 15px rgba(16, 185, 129, 0.5);
+}
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: var(--bg-surface-elevated);
