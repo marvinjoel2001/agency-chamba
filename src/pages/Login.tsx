@@ -30,17 +30,14 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="bg-glow-1" />
-      <div className="bg-glow-2" />
+    <div 
+      className="login-container" 
+      style={{ backgroundImage: `url(${heroSrc})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+    >
+      <div className="login-overlay"></div>
 
-      <div className="login-split">
-        <div className="login-image-panel animate-fade-in">
-          <img src={heroSrc} alt="Chamba" className="login-hero-img" />
-        </div>
-
-        <div className="login-form-panel">
-          <div className="login-box glass-panel animate-fade-in">
+      <div className="login-form-panel">
+        <div className="login-box glass-panel animate-fade-in">
             <div className="login-header">
               <img src={logoSrc} alt="AgencyPanel Logo" className="login-logo-img" />
               <h1>AgencyPanel</h1>
@@ -106,8 +103,7 @@ const Login = () => {
         </div>
       </div>
     </div>
-  </div>
-</div>
+    </div>
   );
 };
 

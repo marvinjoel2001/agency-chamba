@@ -8,41 +8,16 @@
   background-color: var(--bg-base);
 }
 
-.login-split {
-  display: flex;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: 100vh;
-  position: relative;
-  z-index: 10;
-}
-
-.login-image-panel {
-  flex: 1;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-}
-
-@media (min-width: 900px) {
-  .login-image-panel {
-    display: flex;
-  }
-}
-
-.login-hero-img {
-  max-width: 100%;
-  height: auto;
-  filter: drop-shadow(0 20px 30px rgba(155, 48, 255, 0.2));
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
-  100% { transform: translateY(0px); }
+.login-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 8, 18, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1;
 }
 
 .login-form-panel {
@@ -51,12 +26,21 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
+  position: relative;
+  z-index: 10;
+  width: 100%;
 }
 
 .login-box {
   width: 100%;
   max-width: 440px;
   padding: 48px;
+  background: rgba(18, 15, 28, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
 }
 
 .login-header {
