@@ -14,6 +14,7 @@ import {
   AlertCircle,
   KeyRound,
 } from 'lucide-react';
+import logoSrc from '../assets/logo.png';
 import { useAuth } from '../context/AuthContext';
 import { getWorkers, changePassword } from '../lib/agency-api';
 import { getApiErrorMessage } from '../lib/api';
@@ -117,7 +118,7 @@ const Layout = () => {
       <aside className="sidebar glass-panel">
         <div className="sidebar-header">
           <div className="logo-container">
-            <div className="logo-icon">C</div>
+            <img src={logoSrc} alt="Chamba" className="logo-img" />
             <h2>AgencyPanel</h2>
           </div>
         </div>

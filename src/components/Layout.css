@@ -29,19 +29,10 @@
   gap: 12px;
 }
 
-.logo-icon {
+.logo-img {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 1.2rem;
-  color: white;
-  box-shadow: var(--shadow-glow);
+  object-fit: contain;
 }
 
 .logo-container h2 {

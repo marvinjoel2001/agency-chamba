@@ -12,8 +12,8 @@
   --primary-hover: #8A2BE2;
   --primary-glow: rgba(155, 48, 255, 0.3);
   
-  --accent: #33F3FF; /* Cyan */
-  --accent-hover: #00F0FF;
+  --accent: #2563eb; /* Blue 600 for contrast */
+  --accent-hover: #1d4ed8;
   
   --text-main: #1F1F2C; /* Dark text for readability */
   --text-muted: #7A7A8C; /* Medium grey */

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getApiErrorMessage } from '../lib/api';
+import logoSrc from '../assets/logo.png';
+import heroSrc from '../assets/hero-image.png';
 import './Login.css';
 
 const Login = () => {
@@ -32,14 +34,18 @@ const Login = () => {
       <div className="bg-glow-1" />
       <div className="bg-glow-2" />
 
-      <div className="login-box glass-panel animate-fade-in">
-        <div className="login-header">
-          <div className="logo-icon-large">
-            <Building2 size={32} color="white" />
-          </div>
-          <h1>AgencyPanel</h1>
-          <p>Gestiona tu agencia de empleo y conecta a tus trabajadores con clientes locales.</p>
+      <div className="login-split">
+        <div className="login-image-panel animate-fade-in">
+          <img src={heroSrc} alt="Chamba" className="login-hero-img" />
         </div>
+
+        <div className="login-form-panel">
+          <div className="login-box glass-panel animate-fade-in">
+            <div className="login-header">
+              <img src={logoSrc} alt="AgencyPanel Logo" className="login-logo-img" />
+              <h1>AgencyPanel</h1>
+              <p>Gestiona tu agencia de empleo y conecta a tus trabajadores con clientes locales.</p>
+            </div>
 
         <form onSubmit={handleLogin} className="login-form">
           <div className="input-group">
@@ -100,6 +106,7 @@ const Login = () => {
         </div>
       </div>
     </div>
+  </div>
   );
 };
 
