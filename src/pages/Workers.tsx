@@ -7,8 +7,10 @@ import {
   Star,
   UserMinus,
   X,
+  Ban,
+  Unlock,
 } from 'lucide-react';
-import { getWorkers, linkWorker, unlinkWorker } from '../lib/agency-api';
+import { getWorkers, linkWorker, unlinkWorker, toggleWorkerBlock } from '../lib/agency-api';
 import { getApiErrorMessage } from '../lib/api';
 import { fullName, initials } from '../lib/utils';
 import type { AgencyWorker } from '../lib/types';
@@ -78,6 +80,15 @@ const Workers = () => {
       await loadWorkers(search);
     } catch (err) {
       setError(getApiErrorMessage(err, 'No se pudo desvincular al trabajador.'));
+    }
+  };
+
+  const handleToggleBlock = async (worker: AgencyWorker) => {
+    try {
+      await toggleWorkerBlock(worker.id);
+      await loadWorkers(search);
+    } catch (err) {
+      setError(getApiErrorMessage(err, 'No se pudo actualizar el estado de bloqueo del trabajador.'));
     }
   };
 
@@ -173,8 +184,8 @@ const Workers = () => {
                     )}
                   </td>
                   <td>
-                    <span className={`status-badge ${worker.isAvailable ? 'active' : 'inactive'}`}>
-                      {worker.isAvailable ? 'Disponible' : 'No disponible'}
+                    <span className={`status-badge ${worker.isAvailable && !worker.isBlocked ? 'active' : 'inactive'}`}>
+                      {worker.isBlocked ? 'Bloqueado' : (worker.isAvailable ? 'Disponible' : 'No disponible')}
                     </span>
                   </td>
                   <td>
@@ -189,13 +200,22 @@ const Workers = () => {
                     </span>
                   </td>
                   <td>
-                    <button
-                      className="icon-btn"
-                      title="Desvincular de la agencia"
-                      onClick={() => handleUnlink(worker)}
-                    >
-                      <UserMinus size={18} />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        className="icon-btn"
+                        title={worker.isBlocked ? "Desbloquear trabajador" : "Bloquear trabajador"}
+                        onClick={() => handleToggleBlock(worker)}
+                      >
+                        {worker.isBlocked ? <Unlock size={18} /> : <Ban size={18} />}
+                      </button>
+                      <button
+                        className="icon-btn"
+                        title="Desvincular de la agencia"
+                        onClick={() => handleUnlink(worker)}
+                      >
+                        <UserMinus size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

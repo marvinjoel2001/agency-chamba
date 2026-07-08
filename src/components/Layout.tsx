@@ -77,6 +77,8 @@ const Layout = () => {
         pushToast('success', '¡Un cliente aceptó una oferta de tu agencia!');
       } else if (event === 'offer.rejected') {
         pushToast('danger', 'El cliente eligió a otro trabajador en una solicitud.');
+      } else if (event === 'request.published') {
+        pushToast('success', '¡Nuevo trabajo publicado en el mapa! Ve a explorarlo.');
       }
     });
 

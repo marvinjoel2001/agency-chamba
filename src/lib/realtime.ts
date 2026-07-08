@@ -12,6 +12,7 @@ export const AGENCY_EVENTS = [
   'offer.updated',
   'offer.expired',
   'request.status.updated',
+  'request.published',
 ] as const;
 
 export type AgencyRealtimeEvent = (typeof AGENCY_EVENTS)[number];

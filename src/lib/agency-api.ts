@@ -33,10 +33,13 @@ export async function getWorkers(search?: string): Promise<AgencyWorker[]> {
   return data;
 }
 
-export async function linkWorker(email: string): Promise<AgencyWorker | null> {
-  const { data } = await api.post<AgencyWorker | null>('/agency/workers/link', {
-    email,
-  });
+export async function linkWorker(email: string): Promise<AgencyWorker> {
+  const { data } = await api.post<AgencyWorker>('/agency/workers/link', { email });
+  return data;
+}
+
+export async function toggleWorkerBlock(id: string): Promise<{ blocked: boolean }> {
+  const { data } = await api.patch<{ blocked: boolean }>(`/agency/workers/${id}/block`);
   return data;
 }
 
