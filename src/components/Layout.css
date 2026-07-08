@@ -32,7 +32,10 @@
 .logo-img {
   width: 40px;
   height: 40px;
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(155, 48, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.8);
 }
 
 .logo-container h2 {
