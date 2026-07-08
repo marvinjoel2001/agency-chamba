@@ -41,9 +41,16 @@ const Layout = () => {
   const [settingsOk, setSettingsOk] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const playNotificationSound = () => {
+    const audio = new Audio('/notification.mp3');
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  };
+
   const pushToast = (kind: Toast['kind'], message: string) => {
     const id = ++toastSeq;
     setToasts((prev) => [...prev.slice(-2), { id, kind, message }]);
+    playNotificationSound();
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 6000);
