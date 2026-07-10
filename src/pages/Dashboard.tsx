@@ -59,6 +59,15 @@ const Dashboard = () => {
     );
   }
 
+  if (!data.stats) {
+    return (
+      <div className="page-feedback glass-panel">
+        <AlertCircle size={32} color="var(--danger)" />
+        <p>Los datos del dashboard no están disponibles o hubo un error de conexión.</p>
+      </div>
+    );
+  }
+
   const { stats, recentActivity, topWorkers } = data;
 
   const statCards = [
