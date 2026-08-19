@@ -13,9 +13,12 @@ import {
   Loader2,
   AlertCircle,
   KeyRound,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import logoSrc from '../assets/logo.png';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { getWorkers, changePassword } from '../lib/agency-api';
 import { getApiErrorMessage } from '../lib/api';
 import { joinWorkerRooms, subscribeAgencyEvents } from '../lib/realtime';
@@ -32,6 +35,7 @@ let toastSeq = 0;
 const Layout = () => {
   const navigate = useNavigate();
   const { agency, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const [showSettings, setShowSettings] = useState(false);
@@ -166,6 +170,17 @@ const Layout = () => {
             <span className="badge">{agency?.contactEmail ?? ''}</span>
           </div>
           <div className="header-actions">
+            <button
+              className="icon-btn theme-toggle-btn"
+              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              onClick={toggleTheme}
+            >
+              {theme === 'dark' ? (
+                <Sun size={20} className="theme-icon sun-icon" />
+              ) : (
+                <Moon size={20} className="theme-icon moon-icon" />
+              )}
+            </button>
             <button
               className="icon-btn"
               title="Configuración"

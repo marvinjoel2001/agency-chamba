@@ -6,6 +6,7 @@ import Workers from './pages/Workers';
 import JobsMap from './pages/JobsMap';
 import Assignments from './pages/Assignments';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 const ProtectedLayout = () => {
   const { isAuthenticated } = useAuth();
@@ -14,8 +15,9 @@ const ProtectedLayout = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
 
@@ -30,6 +32,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 
