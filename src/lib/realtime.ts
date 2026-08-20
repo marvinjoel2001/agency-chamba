@@ -1,9 +1,18 @@
 import { io, Socket } from 'socket.io-client';
 
-// El gateway de realtime vive en el mismo host que la API, namespace /realtime,
-// sin el prefijo /api (ese es solo para HTTP).
-const API_URL: string = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api';
-const SOCKET_ORIGIN = API_URL.replace(/\/api\/?$/, '');
+function getSocketOrigin(): string {
+  const socketUrl = import.meta.env.VITE_SOCKET_URL;
+  if (socketUrl && typeof socketUrl === 'string' && socketUrl.trim() !== '') {
+    return socketUrl.trim().replace(/\/+$/, '');
+  }
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (apiUrl && typeof apiUrl === 'string' && apiUrl.trim() !== '') {
+    return apiUrl.trim().replace(/\/+$/, '').replace(/\/api$/, '');
+  }
+  return 'http://localhost:3000';
+}
+
+const SOCKET_ORIGIN = getSocketOrigin();
 
 // Eventos que emite el backend sobre ofertas de los workers de la agencia.
 export const AGENCY_EVENTS = [
