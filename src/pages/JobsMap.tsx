@@ -8,14 +8,19 @@ import {
   X,
   CheckCircle2,
   Crosshair,
+  List,
+  Map as MapIcon,
+  Phone,
 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { getActiveJobs, getWorkers, sendOffer } from '../lib/agency-api';
 import { getApiErrorMessage } from '../lib/api';
 import { formatMoney, fullName, timeAgo, OFFER_STATUS_LABELS } from '../lib/utils';
+import { CardSkeleton } from '../components/Skeleton';
 import type { ActiveJob, AgencyWorker } from '../lib/types';
 import './JobsMap.css';
+
 
 // Centro por defecto: La Paz, Bolivia.
 const DEFAULT_CENTER: [number, number] = [-16.4897, -68.1193];
@@ -23,15 +28,15 @@ const DEFAULT_CENTER: [number, number] = [-16.4897, -68.1193];
 const jobIcon = L.divIcon({
   className: '',
   html: '<div class="map-pin-marker"></div>',
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
 });
 
 const workerIcon = L.divIcon({
   className: '',
   html: '<div class="map-worker-marker"></div>',
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
 });
 
 const JobsMap = () => {
@@ -40,13 +45,16 @@ const JobsMap = () => {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Filtros: ubicación de la agencia (geolocalización del navegador),
-  // radio en km y categoría (client-side).
+  // Mobile segmented view switch: 'map' | 'list'
+  const [mobileView, setMobileView] = useState<'map' | 'list'>('map');
+
+  // Filtros: ubicación de la agencia (geolocalización del navegador), radio en km y categoría
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [radiusKm, setRadiusKm] = useState(10);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [locating, setLocating] = useState(false);
 
+  // Modal de Oferta
   const [offerJob, setOfferJob] = useState<ActiveJob | null>(null);
   const [offerWorkerId, setOfferWorkerId] = useState('');
   const [offerAmount, setOfferAmount] = useState('');
@@ -77,24 +85,40 @@ const JobsMap = () => {
 
   useEffect(() => {
     loadData();
-    // Refrescar la lista cuando llega un evento realtime de ofertas.
+    // Refrescar la lista cuando llega un evento realtime de ofertas o solicitudes publicadas.
     const onRealtime = () => loadData();
     window.addEventListener('agency-realtime', onRealtime);
     return () => window.removeEventListener('agency-realtime', onRealtime);
   }, [loadData]);
 
+  const availableWorkers = useMemo(
+    () => workers.filter((worker) => !worker.isBlocked),
+    [workers],
+  );
+
+  const openOfferModal = useCallback(
+    (job: ActiveJob) => {
+      setOfferJob(job);
+      setOfferWorkerId(availableWorkers[0]?.id ?? '');
+      setOfferAmount(String(job.budget));
+      setOfferMessage('');
+      setOfferError(null);
+    },
+    [availableWorkers],
+  );
+
   useEffect(() => {
     const handleOpenOffer = (e: Event) => {
       const customEvent = e as CustomEvent<string>;
       const jobId = customEvent.detail;
-      const job = jobs?.find(j => j.id === jobId);
+      const job = jobs?.find((j) => j.id === jobId);
       if (job) {
         openOfferModal(job);
       }
     };
     window.addEventListener('open-offer', handleOpenOffer);
     return () => window.removeEventListener('open-offer', handleOpenOffer);
-  }, [jobs]);
+  }, [jobs, openOfferModal]);
 
   const handleLocateMe = () => {
     if (origin) {
@@ -166,11 +190,13 @@ const JobsMap = () => {
 
         L.marker(point, { icon: jobIcon })
           .bindPopup(
-            `<div class="map-popup">
-              <strong>${job.title}</strong><br/>
-              ${formatMoney(job.budget)} · ${job.category}<br/>
-              <span>${job.address}</span>
-              <button onclick="window.dispatchEvent(new CustomEvent('open-offer', {detail: '${job.id}'}))" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; display: block;">Hacer Oferta</button>
+            `<div class="map-popup-card">
+              <strong class="map-popup-title">${job.title}</strong>
+              <div class="map-popup-badge">${formatMoney(job.budget)} · ${job.category}</div>
+              <p class="map-popup-address">📍 ${job.address}</p>
+              <button onclick="window.dispatchEvent(new CustomEvent('open-offer', {detail: '${job.id}'}))" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <span>Hacer Oferta</span>
+              </button>
             </div>`,
           )
           .addTo(markers);
@@ -184,14 +210,14 @@ const JobsMap = () => {
 
       let waLink = '';
       if (worker.phone) {
-        waLink = `<a href="https://wa.me/${worker.phone}" target="_blank" class="btn btn-sm" style="margin-top: 8px; display: block; text-align: center; background: #25D366; color: white;">WhatsApp</a>`;
+        waLink = `<a href="https://wa.me/${worker.phone.replace(/\D/g, '')}" target="_blank" class="btn btn-sm" style="margin-top: 8px; display: flex; align-items: center; justify-content: center; background: #25D366; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">WhatsApp</a>`;
       }
 
       L.marker(point, { icon: workerIcon })
         .bindPopup(
-          `<div class="map-popup">
-            <strong>${fullName(worker.firstName, worker.lastName)}</strong><br/>
-            ⭐ ${worker.averageRating.toFixed(1)} · ${worker.activeJobsCount} trabajos activos<br/>
+          `<div class="map-popup-card">
+            <strong class="map-popup-title">👷 ${fullName(worker.firstName, worker.lastName)}</strong>
+            <div style="font-size: 0.82rem; margin: 4px 0;">⭐ ${worker.averageRating.toFixed(1)} · ${worker.activeJobsCount} activos</div>
             ${waLink}
           </div>`,
         )
@@ -203,10 +229,14 @@ const JobsMap = () => {
     }
   }, [jobs, categoryFilter, workers]);
 
-  const availableWorkers = useMemo(
-    () => workers.filter((worker) => !worker.isBlocked),
-    [workers],
-  );
+  // Invalidar tamaño de mapa al cambiar a la vista de mapa en mobile
+  useEffect(() => {
+    if (mobileView === 'map' && mapRef.current) {
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 200);
+    }
+  }, [mobileView]);
 
   const categories = useMemo(() => {
     const unique = new Set((jobs ?? []).map((job) => job.category).filter(Boolean));
@@ -225,17 +255,11 @@ const JobsMap = () => {
     setRefreshing(false);
   };
 
-  const openOfferModal = (job: ActiveJob) => {
-    setOfferJob(job);
-    setOfferWorkerId(availableWorkers[0]?.id ?? '');
-    setOfferAmount(String(job.budget));
-    setOfferMessage('');
-    setOfferError(null);
-  };
-
   const focusJobOnMap = (job: ActiveJob) => {
     if (job.latitude != null && job.longitude != null && mapRef.current) {
       mapRef.current.setView([job.latitude, job.longitude], 15);
+      // If in mobile, switch to map view automatically
+      setMobileView('map');
     }
   };
 
@@ -251,7 +275,7 @@ const JobsMap = () => {
         message: offerMessage.trim() || undefined,
       });
       setOfferJob(null);
-      setSuccessMessage(`Oferta enviada para "${offerJob.title}".`);
+      setSuccessMessage(`¡Oferta enviada exitosamente para "${offerJob.title}"!`);
       setTimeout(() => setSuccessMessage(null), 4000);
       await loadData();
     } catch (err) {
@@ -262,31 +286,37 @@ const JobsMap = () => {
   };
 
   const handleWhatsAppWorker = () => {
-    const selectedWorker = availableWorkers.find(w => w.id === offerWorkerId);
+    const selectedWorker = availableWorkers.find((w) => w.id === offerWorkerId);
     if (!selectedWorker || !selectedWorker.phone || !offerJob) return;
-    
+
     const locUrl = `https://www.google.com/maps/search/?api=1&query=${offerJob.latitude},${offerJob.longitude}`;
-    const text = `Hola ${selectedWorker.firstName}, hay un nuevo trabajo en ${offerJob.address}. Aquí tienes la ubicación exacta: ${locUrl}`;
-    window.open(`https://wa.me/${selectedWorker.phone}?text=${encodeURIComponent(text)}`, '_blank');
+    const text = `Hola ${selectedWorker.firstName}, hay una oportunidad de trabajo: "${offerJob.title}" en ${offerJob.address} por Bs ${offerJob.budget}. Ubicación en mapa: ${locUrl}`;
+    window.open(
+      `https://wa.me/${selectedWorker.phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`,
+      '_blank',
+    );
   };
 
   return (
-    <div className="jobs-page">
+    <div className="jobs-page animate-fade-in">
       <header className="page-header">
         <div>
           <h1>Explorar Trabajos</h1>
-          <p>Busca oportunidades y asigna trabajos a tu equipo.</p>
+          <p>Encuentra solicitudes abiertas de clientes locales y asigna ofertas a tu equipo.</p>
         </div>
-        <div className="header-actions">
+
+        {/* Filtros de ubicación, categoría y recarga */}
+        <div className="jobs-header-actions">
           <button
             className={`btn btn-secondary ${origin ? 'filter-active' : ''}`}
             onClick={handleLocateMe}
             disabled={locating}
-            title={origin ? 'Quitar filtro de ubicación' : 'Filtrar trabajos cerca de mi ubicación'}
+            title={origin ? 'Quitar filtro de ubicación' : 'Filtrar solicitudes cerca de mi ubicación'}
           >
-            {locating ? <Loader2 size={18} className="spin" /> : <Crosshair size={18} />}
-            {origin ? `Cerca de mí (${radiusKm} km)` : 'Cerca de mí'}
+            {locating ? <Loader2 size={16} className="spin" /> : <Crosshair size={16} />}
+            <span>{origin ? `Cerca de mí (${radiusKm} km)` : 'Cerca de mí'}</span>
           </button>
+
           {origin && (
             <select
               className="input-field filter-select"
@@ -299,6 +329,7 @@ const JobsMap = () => {
               <option value={50}>50 km</option>
             </select>
           )}
+
           <select
             className="input-field filter-select"
             value={categoryFilter}
@@ -306,64 +337,125 @@ const JobsMap = () => {
           >
             <option value="">Todas las categorías</option>
             {categories.map((category) => (
-              <option key={category} value={category}>{category}</option>
+              <option key={category} value={category}>
+                {category}
+              </option>
             ))}
           </select>
+
           <button className="btn btn-secondary" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw size={18} className={refreshing ? 'spin' : ''} />
-            Actualizar
+            <RefreshCw size={16} className={refreshing ? 'spin' : ''} />
+            <span>Actualizar</span>
           </button>
         </div>
       </header>
 
+      {/* Selector de vista móvil (Mapa vs Lista) */}
+      <div className="mobile-view-toggle glass-panel">
+        <button
+          className={`toggle-btn ${mobileView === 'map' ? 'active' : ''}`}
+          onClick={() => setMobileView('map')}
+        >
+          <MapIcon size={16} />
+          <span>Mapa</span>
+        </button>
+        <button
+          className={`toggle-btn ${mobileView === 'list' ? 'active' : ''}`}
+          onClick={() => setMobileView('list')}
+        >
+          <List size={16} />
+          <span>Lista ({filteredJobs?.length ?? 0})</span>
+        </button>
+      </div>
+
       {successMessage && (
-        <div className="success-toast glass-panel">
+        <div className="success-toast glass-panel animate-fade-in">
           <CheckCircle2 size={18} color="var(--success)" />
           <span>{successMessage}</span>
         </div>
       )}
 
-      <div className="jobs-container">
+      {error && (
+        <div className="page-feedback glass-panel animate-fade-in">
+          <AlertCircle size={32} color="var(--danger)" />
+          <p>{error}</p>
+          <button className="btn btn-secondary btn-sm" onClick={handleRefresh}>
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {/* Contenedor Responsivo Mapa + Lista */}
+      <div className={`jobs-container ${mobileView}`}>
+        {/* Vista de Mapa */}
         <div className="map-view glass-panel">
           <div ref={mapContainerRef} className="leaflet-map" />
         </div>
 
+        {/* Vista de Lista de Trabajos */}
         <div className="jobs-list glass-panel">
-          <h3>Trabajos Activos {filteredJobs ? `(${filteredJobs.length})` : ''}</h3>
+          <div className="jobs-list-header">
+            <h3>Trabajos Activos {filteredJobs ? `(${filteredJobs.length})` : ''}</h3>
+            {categoryFilter && (
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setCategoryFilter('')}
+                title="Quitar filtro de categoría"
+              >
+                Limpiar filtro
+              </button>
+            )}
+          </div>
+
           <div className="jobs-scroll-area">
-            {error && (
-              <div className="page-feedback">
-                <AlertCircle size={24} color="var(--danger)" />
-                <p>{error}</p>
-              </div>
-            )}
             {!error && filteredJobs === null && (
-              <div className="page-feedback">
-                <Loader2 size={24} className="spin" color="var(--primary)" />
-                <p>Cargando trabajos...</p>
-              </div>
+              <CardSkeleton count={3} />
             )}
+
+
             {!error && filteredJobs !== null && filteredJobs.length === 0 && (
               <div className="page-feedback">
-                <MapPin size={24} />
+                <MapPin size={28} color="var(--text-muted)" />
                 <p>No hay solicitudes activas con estos filtros.</p>
+                {(categoryFilter || origin) && (
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => {
+                      setCategoryFilter('');
+                      setOrigin(null);
+                    }}
+                  >
+                    Restablecer filtros
+                  </button>
+                )}
               </div>
             )}
+
             {filteredJobs?.map((job) => (
-              <div key={job.id} className="job-card" onClick={() => focusJobOnMap(job)}>
+              <div
+                key={job.id}
+                className="job-card"
+                onClick={() => focusJobOnMap(job)}
+                title="Clic para enfocar en el mapa"
+              >
                 <div className="job-header">
                   <h4>{job.title}</h4>
                   <span className="job-price">{formatMoney(job.budget)}</span>
                 </div>
+
                 <div className="job-meta">
-                  <span><MapPin size={12} /> {job.address}</span>
+                  <span>
+                    <MapPin size={13} /> {job.address}
+                  </span>
                   <span>{timeAgo(job.createdAt)}</span>
                 </div>
+
                 <div className="job-meta">
                   <span className="badge">{job.category}</span>
-                  <span>{job.pendingOffersCount} ofertas en juego</span>
+                  <span className="fs-small text-muted">{job.pendingOffersCount} ofertas recibidas</span>
                 </div>
-                <div className="job-actions">
+
+                <div className="job-actions" onClick={(e) => e.stopPropagation()}>
                   {job.myOfferStatus ? (
                     <span className="status-badge active">
                       Tu oferta: {OFFER_STATUS_LABELS[job.myOfferStatus] ?? job.myOfferStatus}
@@ -371,12 +463,10 @@ const JobsMap = () => {
                   ) : (
                     <button
                       className="btn btn-primary btn-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openOfferModal(job);
-                      }}
+                      onClick={() => openOfferModal(job)}
                     >
-                      <Send size={14} /> Ofertar
+                      <Send size={13} />
+                      <span>Hacer Oferta</span>
                     </button>
                   )}
                 </div>
@@ -386,29 +476,33 @@ const JobsMap = () => {
         </div>
       </div>
 
+      {/* Modal: Enviar Oferta */}
       {offerJob && (
         <div className="modal-overlay" onClick={() => setOfferJob(null)}>
           <div className="modal glass-panel" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Ofertar: {offerJob.title}</h3>
+              <h3>Ofertar para: {offerJob.title}</h3>
               <button className="icon-btn" onClick={() => setOfferJob(null)}>
                 <X size={18} />
               </button>
             </div>
             <p className="text-muted fs-small modal-hint">
-              Presupuesto del cliente: <strong>{formatMoney(offerJob.budget)}</strong> ·{' '}
+              Presupuesto propuesto por el cliente:{' '}
+              <strong style={{ color: 'var(--success)' }}>{formatMoney(offerJob.budget)}</strong> ·{' '}
               {offerJob.address}
             </p>
 
             {availableWorkers.length === 0 ? (
               <div className="login-error">
                 <AlertCircle size={16} />
-                <span>No tienes trabajadores vinculados. Añade uno desde "Trabajadores".</span>
+                <span>
+                  No tienes trabajadores vinculados o disponibles. Añade uno desde la pestaña "Trabajadores".
+                </span>
               </div>
             ) : (
               <form onSubmit={handleSendOffer}>
                 <div className="input-group">
-                  <label>Trabajador</label>
+                  <label>Trabajador que ejecutará el trabajo</label>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <select
                       className="input-field"
@@ -420,27 +514,34 @@ const JobsMap = () => {
                       {availableWorkers.map((worker) => (
                         <option key={worker.id} value={worker.id}>
                           {fullName(worker.firstName, worker.lastName)}
-                          {worker.isAvailable ? '' : ' (no disponible)'}
+                          {worker.isAvailable ? '' : ' (en trabajo)'}
                           {` · ★ ${worker.averageRating.toFixed(1)}`}
                         </option>
                       ))}
                     </select>
-                    {availableWorkers.find(w => w.id === offerWorkerId)?.phone && (
-                      <button 
-                        type="button" 
+
+                    {availableWorkers.find((w) => w.id === offerWorkerId)?.phone && (
+                      <button
+                        type="button"
                         onClick={handleWhatsAppWorker}
-                        className="btn" 
-                        style={{ background: '#25D366', color: 'white', padding: '0 12px', borderColor: '#25D366' }}
-                        title="Enviar ubicación por WhatsApp"
+                        className="btn"
+                        style={{
+                          background: '#25D366',
+                          color: 'white',
+                          padding: '0 12px',
+                          borderColor: '#25D366',
+                        }}
+                        title="Enviar detalles del trabajo al trabajador por WhatsApp"
                       >
-                        WhatsApp
+                        <Phone size={15} />
+                        <span>Avisar</span>
                       </button>
                     )}
                   </div>
                 </div>
 
                 <div className="input-group">
-                  <label>Monto de la oferta (Bs)</label>
+                  <label>Monto de la oferta para el cliente (Bs)</label>
                   <input
                     type="number"
                     className="input-field"
@@ -453,11 +554,11 @@ const JobsMap = () => {
                 </div>
 
                 <div className="input-group">
-                  <label>Mensaje para el cliente (opcional)</label>
+                  <label>Mensaje o garantía de tu agencia (opcional)</label>
                   <textarea
                     className="input-field"
                     rows={3}
-                    placeholder="Nuestro trabajador tiene experiencia en este tipo de trabajos..."
+                    placeholder="Ej: Contamos con herramientas profesionales y garantía de puntualidad..."
                     value={offerMessage}
                     onChange={(e) => setOfferMessage(e.target.value)}
                   />
@@ -471,12 +572,16 @@ const JobsMap = () => {
                 )}
 
                 <div className="modal-actions">
-                  <button type="button" className="btn btn-secondary" onClick={() => setOfferJob(null)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setOfferJob(null)}
+                  >
                     Cancelar
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={sending}>
-                    {sending ? <Loader2 size={16} className="spin" /> : <Send size={16} />}
-                    Enviar Oferta
+                    {sending ? <Loader2 size={16} className="spin" /> : <Send size={15} />}
+                    <span>Enviar Oferta</span>
                   </button>
                 </div>
               </form>

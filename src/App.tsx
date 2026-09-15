@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Workers from './pages/Workers';
 import JobsMap from './pages/JobsMap';
 import Assignments from './pages/Assignments';
+import Reports from './pages/Reports';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -28,6 +29,7 @@ function App() {
             <Route path="workers" element={<Workers />} />
             <Route path="jobs" element={<JobsMap />} />
             <Route path="assignments" element={<Assignments />} />
+            <Route path="reports" element={<Reports />} />
           </Route>
         </Routes>
       </Router>
@@ -35,5 +37,6 @@ function App() {
     </ThemeProvider>
   );
 }
+
 
 export default App;

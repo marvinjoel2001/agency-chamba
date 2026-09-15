@@ -102,3 +102,61 @@ export interface DashboardData {
   recentActivity: ActivityItem[];
   topWorkers: TopWorker[];
 }
+
+export interface FinancialSummary {
+  totalRevenue: number;
+  commissionRate: number;
+  agencyEarnings: number;
+  workersPayout: number;
+  totalJobsCount: number;
+  completedJobsCount: number;
+  inProgressJobsCount: number;
+  averageTicket: number;
+  period: string;
+}
+
+export interface WorkerReportItem {
+  workerId: string;
+  workerName: string;
+  profilePhotoUrl: string | null;
+  phone: string | null;
+  skills: string[];
+  averageRating: number;
+  completedJobs: number;
+  inProgressJobs: number;
+  totalJobs: number;
+  totalGenerated: number;
+  agencyCommission: number;
+  workerPayout: number;
+  averageJobValue: number;
+  jobs: FinancialJobItem[];
+}
+
+export interface FinancialJobItem {
+  requestId: string;
+  offerId: string;
+  title: string;
+  category: string;
+  address: string;
+  status: string;
+  amount: number;
+  commissionRate: number;
+  agencyCommission: number;
+  workerEarnings: number;
+  offeredAt: string;
+  completedAt: string | null;
+  worker: {
+    id: string;
+    name: string;
+    profilePhotoUrl: string | null;
+    phone: string | null;
+  };
+  clientName: string;
+}
+
+export interface AgencyReportsData {
+  summary: FinancialSummary;
+  workers: WorkerReportItem[];
+  jobs: FinancialJobItem[];
+}
+
