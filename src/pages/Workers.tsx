@@ -18,11 +18,14 @@ import {
   Award,
   ExternalLink,
   BarChart3,
+  ShieldAlert,
 } from 'lucide-react';
 import { getWorkers, linkWorker, unlinkWorker, toggleWorkerBlock } from '../lib/agency-api';
+import { joinWorkerRooms } from '../lib/realtime';
 import { getApiErrorMessage } from '../lib/api';
 import { fullName, initials } from '../lib/utils';
 import { TableSkeleton } from '../components/Skeleton';
+import { DisputesModal } from '../components/DisputesModal';
 import type { AgencyWorker } from '../lib/types';
 import './Workers.css';
 
@@ -56,6 +59,10 @@ const Workers = () => {
   // Unlink Confirmation Modal
   const [workerToUnlink, setWorkerToUnlink] = useState<AgencyWorker | null>(null);
   const [unlinking, setUnlinking] = useState(false);
+
+  // Disputes Modal
+  const [showDisputesModal, setShowDisputesModal] = useState(false);
+  const [disputesFilterWorker, setDisputesFilterWorker] = useState<{ id: string; name: string } | null>(null);
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -94,7 +101,10 @@ const Workers = () => {
     setLinkError(null);
     setLinking(true);
     try {
-      await linkWorker(linkEmail);
+      const linked = await linkWorker(linkEmail);
+      if (linked?.id) {
+        joinWorkerRooms([linked.id]);
+      }
       setShowLinkModal(false);
       setLinkEmail('');
       await loadWorkers(search);
@@ -162,6 +172,17 @@ const Workers = () => {
           >
             <BarChart3 size={16} />
             <span>Informes y Finanzas</span>
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              setDisputesFilterWorker(null);
+              setShowDisputesModal(true);
+            }}
+            title="Ver reclamos y reportes de clientes hacia tus trabajadores"
+          >
+            <ShieldAlert size={16} color="var(--danger)" />
+            <span>Reclamos y Disputas</span>
           </button>
           <button className="btn btn-primary" onClick={() => setShowLinkModal(true)}>
             <UserPlus size={16} />
@@ -300,21 +321,32 @@ const Workers = () => {
                     </div>
                   </td>
                   <td>
-                    <span
-                      className={`status-badge ${
-                        worker.isBlocked
-                          ? 'inactive'
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                      <span
+                        className={`status-badge ${
+                          worker.isBlocked
+                            ? 'inactive'
+                            : worker.isAvailable
+                            ? 'active'
+                            : 'inactive'
+                        }`}
+                      >
+                        {worker.isBlocked
+                          ? 'Bloqueado'
                           : worker.isAvailable
-                          ? 'active'
-                          : 'inactive'
-                      }`}
-                    >
-                      {worker.isBlocked
-                        ? 'Bloqueado'
-                        : worker.isAvailable
-                        ? 'Disponible'
-                        : 'No disponible'}
-                    </span>
+                          ? 'Disponible'
+                          : 'No disponible'}
+                      </span>
+                      {worker.latitude == null || worker.longitude == null ? (
+                        <span
+                          className="badge"
+                          style={{ fontSize: '0.7rem', opacity: 0.8 }}
+                          title="El trabajador no ha reportado GPS reciente desde la app móvil"
+                        >
+                          Sin GPS
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td>
                     <span className="text-muted fs-small">
@@ -485,6 +517,20 @@ const Workers = () => {
                   </button>
                   <button
                     className="btn btn-secondary btn-sm"
+                    onClick={() => {
+                      setDisputesFilterWorker({
+                        id: detailWorker.id,
+                        name: fullName(detailWorker.firstName, detailWorker.lastName),
+                      });
+                      setShowDisputesModal(true);
+                    }}
+                    title="Ver reclamos y reportes de este trabajador"
+                  >
+                    <ShieldAlert size={14} color="var(--danger)" />
+                    <span>Ver Reclamos</span>
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-sm"
                     onClick={() => handleToggleBlock(detailWorker)}
                   >
                     {detailWorker.isBlocked ? (
@@ -617,6 +663,18 @@ const Workers = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal: Reclamos y Disputas */}
+      {showDisputesModal && (
+        <DisputesModal
+          onClose={() => {
+            setShowDisputesModal(false);
+            setDisputesFilterWorker(null);
+          }}
+          filterWorkerId={disputesFilterWorker?.id}
+          filterWorkerName={disputesFilterWorker?.name}
+        />
       )}
     </div>
   );

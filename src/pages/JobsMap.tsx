@@ -515,6 +515,7 @@ const JobsMap = () => {
                         <option key={worker.id} value={worker.id}>
                           {fullName(worker.firstName, worker.lastName)}
                           {worker.isAvailable ? '' : ' (en trabajo)'}
+                          {worker.latitude == null ? ' [Sin GPS]' : ''}
                           {` · ★ ${worker.averageRating.toFixed(1)}`}
                         </option>
                       ))}

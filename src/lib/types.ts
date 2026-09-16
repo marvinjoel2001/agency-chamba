@@ -160,3 +160,23 @@ export interface AgencyReportsData {
   jobs: FinancialJobItem[];
 }
 
+export interface AgencyDispute {
+  id: string;
+  requestId: string | null;
+  reason: string;
+  description: string | null;
+  status: string;
+  resolution: string | null;
+  createdAt: string;
+  updatedAt: string;
+  requestTitle: string;
+  worker: {
+    id: string;
+    name: string;
+  };
+  reportedBy: {
+    name: string;
+    type: string;
+  };
+}
+

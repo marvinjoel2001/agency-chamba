@@ -7,6 +7,7 @@ import type {
   DashboardData,
   LoginResponse,
   AgencyReportsData,
+  AgencyDispute,
 } from './types';
 
 
@@ -217,4 +218,10 @@ export async function getReports(params?: {
     };
   }
 }
+
+export async function getDisputes(): Promise<AgencyDispute[]> {
+  const { data } = await api.get<AgencyDispute[]>('/agency/disputes');
+  return data;
+}
+
 
