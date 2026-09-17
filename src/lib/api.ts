@@ -8,7 +8,10 @@ export function getApiBaseUrl(): string {
   if (!envUrl || typeof envUrl !== 'string' || envUrl.trim() === '') {
     return 'http://localhost:3000/api';
   }
-  const clean = envUrl.trim().replace(/\/+$/, '');
+  let clean = envUrl.trim().replace(/\/+$/, '');
+  if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+    clean = `https://${clean}`;
+  }
   return clean.endsWith('/api') ? clean : `${clean}/api`;
 }
 
