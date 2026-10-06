@@ -33,6 +33,7 @@ function getSocket(): Socket {
   if (!socket) {
     socket = io(`${SOCKET_ORIGIN}/realtime`, {
       transports: ['websocket'],
+      auth: { token: localStorage.getItem('agency_token') },
       reconnectionDelayMax: 10000,
     });
     // Al reconectar hay que volver a unirse a las salas de cada worker.
