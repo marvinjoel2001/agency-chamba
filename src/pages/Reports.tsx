@@ -217,7 +217,7 @@ const Reports = () => {
     const msg = `Hola ${worker.workerName}, te enviamos tu informe de liquidación de *${agency?.name ?? 'la Agencia'}* (${periodLabel}):\n\n` +
       `📌 Trabajos completados: ${worker.completedJobs}\n` +
       `💰 Dinero total generado: ${formatMoney(worker.totalGenerated)}\n` +
-      `🏢 Comisión de agencia (${data?.summary.commissionRate ?? 15}%): ${formatMoney(worker.agencyCommission)}\n` +
+      `🏢 Comisión de agencia (${data?.summary.commissionRate ?? 0}%): ${formatMoney(worker.agencyCommission)}\n` +
       `💵 *Monto neto para ti: ${formatMoney(worker.workerPayout)}*\n\n` +
       `¡Gracias por tu excelente labor en el equipo!`;
 

@@ -22,8 +22,17 @@ import type { ActiveJob, AgencyWorker } from '../lib/types';
 import './JobsMap.css';
 
 
-// Centro por defecto: La Paz, Bolivia.
-const DEFAULT_CENTER: [number, number] = [-16.4897, -68.1193];
+// Centro inicial mientras no hay trabajos ni ubicación: Bolivia completa.
+const DEFAULT_CENTER: [number, number] = [-17.0, -64.5];
+const DEFAULT_ZOOM = 6;
+
+// Título, dirección y nombres los escribe el usuario: se escapan antes de
+// insertarlos en el HTML del popup de Leaflet.
+const esc = (value: unknown): string =>
+  String(value ?? '').replace(
+    /[&<>"']/g,
+    (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch] as string,
+  );
 
 const jobIcon = L.divIcon({
   className: '',
@@ -154,7 +163,7 @@ const JobsMap = () => {
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    const map = L.map(mapContainerRef.current).setView(DEFAULT_CENTER, 13);
+    const map = L.map(mapContainerRef.current).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19,
@@ -191,10 +200,10 @@ const JobsMap = () => {
         L.marker(point, { icon: jobIcon })
           .bindPopup(
             `<div class="map-popup-card">
-              <strong class="map-popup-title">${job.title}</strong>
-              <div class="map-popup-badge">${formatMoney(job.budget)} · ${job.category}</div>
-              <p class="map-popup-address">📍 ${job.address}</p>
-              <button onclick="window.dispatchEvent(new CustomEvent('open-offer', {detail: '${job.id}'}))" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <strong class="map-popup-title">${esc(job.title)}</strong>
+              <div class="map-popup-badge">${esc(formatMoney(job.budget))} · ${esc(job.category)}</div>
+              <p class="map-popup-address">📍 ${esc(job.address)}</p>
+              <button onclick="window.dispatchEvent(new CustomEvent('open-offer', {detail: '${esc(job.id)}'}))" class="btn btn-primary btn-sm" style="margin-top: 8px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;">
                 <span>Hacer Oferta</span>
               </button>
             </div>`,
@@ -216,7 +225,7 @@ const JobsMap = () => {
       L.marker(point, { icon: workerIcon })
         .bindPopup(
           `<div class="map-popup-card">
-            <strong class="map-popup-title">👷 ${fullName(worker.firstName, worker.lastName)}</strong>
+            <strong class="map-popup-title">👷 ${esc(fullName(worker.firstName, worker.lastName))}</strong>
             <div style="font-size: 0.82rem; margin: 4px 0;">⭐ ${worker.averageRating.toFixed(1)} · ${worker.activeJobsCount} activos</div>
             ${waLink}
           </div>`,
@@ -456,7 +465,7 @@ const JobsMap = () => {
                 </div>
 
                 <div className="job-actions" onClick={(e) => e.stopPropagation()}>
-                  {job.myOfferStatus ? (
+                  {job.myOfferStatus === 'pending' || job.myOfferStatus === 'accepted' ? (
                     <span className="status-badge active">
                       Tu oferta: {OFFER_STATUS_LABELS[job.myOfferStatus] ?? job.myOfferStatus}
                     </span>

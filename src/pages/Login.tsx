@@ -12,7 +12,6 @@ import {
   X,
   ExternalLink,
   HelpCircle,
-  Sparkles,
   Sun,
   Moon,
   Shield,
@@ -56,12 +55,6 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickDemo = () => {
-    setEmail('agencia@chamba.com');
-    setPassword('agencia123');
-    setError(null);
   };
 
   return (
@@ -273,19 +266,6 @@ const Login = () => {
               </button>
             </form>
 
-            {/* Quick Demo Helper */}
-            <div className="card-demo-chip-container">
-              <button
-                type="button"
-                className="card-demo-chip"
-                onClick={handleQuickDemo}
-                title="Completar datos de demostración"
-              >
-                <Sparkles size={12} />
-                <span>Rellenar credenciales demo</span>
-              </button>
-            </div>
-
             {/* Card Support Footer */}
             <div className="card-footer-support">
               <Bell size={14} className="support-bell-icon" />
@@ -327,7 +307,7 @@ const Login = () => {
               </button>
             </div>
             <p className="modal-hint">
-              El acceso de agencias en Chamba está reservado a entidades corporativas con NIT y razón social verificada. Para ingresar utiliza tu correo institucional registrado o completa las credenciales de prueba.
+              El acceso de agencias en Chamba está reservado a entidades corporativas con NIT y razón social verificada. Para ingresar utiliza tu correo institucional registrado.
             </p>
             <div className="modal-actions">
               <button
@@ -336,16 +316,6 @@ const Login = () => {
                 onClick={() => setShowGoogleNotice(false)}
               >
                 Cerrar
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => {
-                  handleQuickDemo();
-                  setShowGoogleNotice(false);
-                }}
-              >
-                Usar credenciales demo
               </button>
             </div>
           </div>
