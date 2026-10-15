@@ -8,6 +8,11 @@ import type {
   LoginResponse,
   AgencyReportsData,
   AgencyDispute,
+  AgencyMessage,
+  AgencySettings,
+  ChambaAccountData,
+  PayoutsData,
+  WorkerCredentials,
 } from './types';
 
 
@@ -96,5 +101,80 @@ export async function getReports(params?: {
 
 export async function getDisputes(): Promise<AgencyDispute[]> {
   const { data } = await api.get<AgencyDispute[]>('/agency/disputes');
+  return data;
+}
+
+// ── Operación de la agencia ──
+
+export async function getSettings(): Promise<AgencySettings> {
+  const { data } = await api.get<AgencySettings>('/agency/settings');
+  return data;
+}
+
+export async function updateSettings(payload: { workerCommissionRate: number }): Promise<AgencySettings> {
+  const { data } = await api.patch<AgencySettings>('/agency/settings', payload);
+  return data;
+}
+
+export async function createWorker(payload: {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  phone?: string;
+  password?: string;
+  skills?: string[];
+  commissionRate?: number | null;
+}): Promise<WorkerCredentials> {
+  const { data } = await api.post<WorkerCredentials>('/agency/workers', payload);
+  return data;
+}
+
+export async function resetWorkerPassword(workerId: string): Promise<WorkerCredentials> {
+  const { data } = await api.post<WorkerCredentials>(`/agency/workers/${workerId}/password`);
+  return data;
+}
+
+export async function setWorkerCommission(workerId: string, commissionRate: number | null) {
+  const { data } = await api.patch<{ commissionRate: number | null }>(
+    `/agency/workers/${workerId}/commission`,
+    { commissionRate },
+  );
+  return data;
+}
+
+export async function getMessages(): Promise<AgencyMessage[]> {
+  const { data } = await api.get<AgencyMessage[]>('/agency/messages');
+  return data;
+}
+
+export async function sendMessage(payload: {
+  title: string;
+  body: string;
+  workerIds: string[] | 'all';
+}): Promise<AgencyMessage> {
+  const { data } = await api.post<AgencyMessage>('/agency/messages', payload);
+  return data;
+}
+
+export async function getPayouts(): Promise<PayoutsData> {
+  const { data } = await api.get<PayoutsData>('/agency/payouts');
+  return data;
+}
+
+export async function createPayout(payload: {
+  workerId: string;
+  amount: number;
+  kind: 'paid' | 'kept_cash';
+  note?: string;
+}): Promise<void> {
+  await api.post('/agency/payouts', payload);
+}
+
+export async function deletePayout(id: string): Promise<void> {
+  await api.delete(`/agency/payouts/${id}`);
+}
+
+export async function getChambaAccount(): Promise<ChambaAccountData> {
+  const { data } = await api.get<ChambaAccountData>('/agency/chamba-account');
   return data;
 }

@@ -27,6 +27,9 @@ export interface AgencyWorker {
   activeJobsCount: number;
   latitude: number | null;
   longitude: number | null;
+  /** Comisión propia; null = usa la general de la agencia. */
+  commissionRate: number | null;
+  hasPassword: boolean;
 }
 
 export interface ActiveJob {
@@ -180,3 +183,97 @@ export interface AgencyDispute {
   };
 }
 
+
+// ── Operación de la agencia ──
+
+export interface AgencySettings {
+  id: string;
+  name: string;
+  contactEmail: string;
+  contactPhone: string | null;
+  taxId: string | null;
+  /** Lo que Chamba cobra a la agencia (lo fija Chamba). */
+  chambaCommissionRate: number;
+  /** Lo que la agencia se queda de sus trabajadores. */
+  workerCommissionRate: number;
+}
+
+export interface WorkerCredentials {
+  workerId: string;
+  email: string;
+  phone: string | null;
+  password: string;
+}
+
+export interface AgencyMessage {
+  id: string;
+  title: string;
+  body: string;
+  recipients: number;
+  pushed: number;
+  createdAt: string;
+}
+
+export interface WorkerBalance {
+  workerId: string;
+  workerName: string;
+  profilePhotoUrl: string | null;
+  phone: string | null;
+  commissionRate: number | null;
+  jobsCount: number;
+  generated: number;
+  agencyCut: number;
+  earned: number;
+  paid: number;
+  /** > 0: la agencia le debe. < 0: el trabajador le debe a la agencia. */
+  balance: number;
+  lastPaidAt: string | null;
+}
+
+export interface PayoutRecord {
+  id: string;
+  workerId: string;
+  workerName: string;
+  amount: number;
+  kind: 'paid' | 'kept_cash';
+  note: string | null;
+  paidAt: string;
+}
+
+export interface PayoutsData {
+  summary: { owedToWorkers: number; owedByWorkers: number; paidTotal: number };
+  workers: WorkerBalance[];
+  history: PayoutRecord[];
+}
+
+export interface ChambaAccountData {
+  summary: {
+    /** > 0: Chamba le debe a la agencia. */
+    balance: number;
+    digitalJobs: number;
+    digitalCollected: number;
+    digitalFees: number;
+    cashJobs: number;
+    cashFees: number;
+    paidToAgency: number;
+    paidToChamba: number;
+  };
+  jobs: Array<{
+    requestId: string;
+    title: string;
+    workerName: string;
+    completedAt: string | null;
+    amount: number;
+    isDigital: boolean;
+    chambaRate: number;
+    chambaFee: number;
+    effect: number;
+  }>;
+  settlements: Array<{
+    id: string;
+    direction: 'to_agency' | 'to_chamba';
+    amount: number;
+    note: string | null;
+    createdAt: string;
+  }>;
+}

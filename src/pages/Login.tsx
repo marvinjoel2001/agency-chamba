@@ -49,7 +49,7 @@ const Login = () => {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate('/inicio');
     } catch (err) {
       setError(getApiErrorMessage(err, 'No se pudo iniciar sesión. Verifica tus credenciales.'));
     } finally {
