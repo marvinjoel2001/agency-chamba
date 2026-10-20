@@ -55,7 +55,11 @@ export default function Fleet() {
   const available = all.filter((w) => w.isAvailable && !w.isBlocked).length;
 
   const close = () => setPanel(null);
-  const refresh = () => workers.reload(true);
+  const refresh = () => {
+    workers.reload(true);
+    // El puente de tiempo real se une a la sala de los trabajadores nuevos.
+    window.dispatchEvent(new CustomEvent('agency:workers-changed'));
+  };
 
   return (
     <>
@@ -162,14 +166,16 @@ export default function Fleet() {
                     >
                       {w.commissionRate == null ? `General ${rate(generalRate)}` : `Comisión ${rate(w.commissionRate)}`}
                     </button>
-                    <button
-                      className="ag-btn ag-btn-ghost ag-btn-sm"
-                      onClick={() => navigate(`/avisos?para=${w.id}`)}
-                      title={`Mandar un aviso a ${w.firstName}`}
-                    >
-                      <MessageSquare />
-                      Aviso
-                    </button>
+                    {!w.isBlocked && (
+                      <button
+                        className="ag-btn ag-btn-ghost ag-btn-sm"
+                        onClick={() => navigate(`/avisos?para=${w.id}`)}
+                        title={`Mandar un aviso a ${w.firstName}`}
+                      >
+                        <MessageSquare />
+                        Aviso
+                      </button>
+                    )}
                     <button
                       className="ag-btn ag-btn-ghost ag-btn-sm"
                       onClick={() => setPanel({ kind: 'password', worker: w })}
@@ -399,13 +405,36 @@ function CreateWorkerSheet({
 function LinkWorkerSheet({ onClose, onLinked }: { onClose: () => void; onLinked: () => void }) {
   const toast = useToast();
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  // Tras pedir el código, la hoja espera el que el trabajador recibió en la app.
+  const [codeSent, setCodeSent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const submit = async () => {
+  const requestCode = async () => {
     setSaving(true);
     setError(null);
     try {
-      await linkWorker(email.trim());
+      const result = await linkWorker(email.trim());
+      if ('pending' in result) {
+        setCodeSent(true);
+        setCode('');
+        toast('Le enviamos un código al trabajador.');
+      } else {
+        toast('Ese trabajador ya está en tu flota.');
+        onLinked();
+        onClose();
+      }
+    } catch (err) {
+      setError(errorText(err, 'No pudimos enviar el código.'));
+    } finally {
+      setSaving(false);
+    }
+  };
+  const confirmCode = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await linkWorker(email.trim(), code.trim());
       toast('Trabajador vinculado a tu flota.');
       onLinked();
       onClose();
@@ -418,23 +447,57 @@ function LinkWorkerSheet({ onClose, onLinked }: { onClose: () => void; onLinked:
   return (
     <Sheet
       title="Vincular cuenta existente"
-      intro="Para un trabajador que ya tiene cuenta en Chamba. Desde ahora solo recibirá trabajos de tu agencia."
+      intro={
+        codeSent
+          ? 'Le llegó una notificación a la app con un código de 6 dígitos (vence en 15 min). Pídeselo e ingrésalo aquí.'
+          : 'Para un trabajador que ya tiene cuenta en Chamba. Le enviaremos un código para que acepte; desde entonces solo recibirá trabajos de tu agencia.'
+      }
       onClose={onClose}
       footer={
         <>
           <button className="ag-btn ag-btn-ghost" onClick={onClose}>
             Cancelar
           </button>
-          <button className="ag-btn ag-btn-primary" disabled={!/\S+@\S+\.\S+/.test(email) || saving} onClick={submit}>
-            {saving ? 'Vinculando…' : 'Vincular'}
-          </button>
+          {codeSent ? (
+            <button className="ag-btn ag-btn-primary" disabled={!/^\d{6}$/.test(code) || saving} onClick={confirmCode}>
+              {saving ? 'Vinculando…' : 'Vincular'}
+            </button>
+          ) : (
+            <button className="ag-btn ag-btn-primary" disabled={!/\S+@\S+\.\S+/.test(email) || saving} onClick={requestCode}>
+              {saving ? 'Enviando…' : 'Enviar código'}
+            </button>
+          )}
         </>
       }
     >
       <label className="ag-field">
         <span>Correo de su cuenta</span>
-        <input className="ag-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input
+          className="ag-input"
+          type="email"
+          value={email}
+          disabled={codeSent}
+          onChange={(e) => setEmail(e.target.value)}
+        />
       </label>
+      {codeSent && (
+        <>
+          <label className="ag-field">
+            <span>Código que recibió el trabajador</span>
+            <input
+              className="ag-input"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+            />
+          </label>
+          <button className="ag-btn ag-btn-ghost ag-btn-sm" disabled={saving} onClick={requestCode}>
+            Enviar otro código
+          </button>
+        </>
+      )}
       {error && <ErrorNote message={error} />}
     </Sheet>
   );

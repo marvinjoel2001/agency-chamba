@@ -35,7 +35,9 @@ export default function Notices() {
   const team = (workers.data ?? []).filter((w) => !w.isBlocked);
   const toggle = (id: string) =>
     setPicked((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]));
-  const count = audience === 'all' ? team.length : picked.length;
+  // Un id que llegó por ?para= de un bloqueado no está en la lista: no cuenta ni se envía.
+  const recipients = picked.filter((id) => team.some((w) => w.id === id));
+  const count = audience === 'all' ? team.length : recipients.length;
   const valid = title.trim() && body.trim() && count > 0;
 
   const submit = async () => {
@@ -45,7 +47,7 @@ export default function Notices() {
       const sent = await sendMessage({
         title: title.trim(),
         body: body.trim(),
-        workerIds: audience === 'all' ? 'all' : picked,
+        workerIds: audience === 'all' ? 'all' : recipients,
       });
       toast(
         sent.recipients === 1

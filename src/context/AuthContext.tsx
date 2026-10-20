@@ -48,6 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // responde 401 (token vencido o inválido).
   useEffect(() => {
     const onForcedLogout = () => {
+      // Sin esto el socket seguía unido a las salas con el token vencido.
+      disconnectRealtime();
       setToken(null);
       setAgency(null);
     };
