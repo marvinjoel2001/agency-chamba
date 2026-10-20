@@ -40,9 +40,13 @@ function RealtimeBridge() {
   const toast = useToast();
   useEffect(() => {
     let active = true;
-    getWorkers()
-      .then((workers) => active && joinWorkerRooms(workers.map((w) => w.id)))
-      .catch(() => undefined);
+    const joinRooms = () =>
+      getWorkers()
+        .then((workers) => active && joinWorkerRooms(workers.map((w) => w.id)))
+        .catch(() => undefined);
+    joinRooms();
+    // Mi flota avisa al crear o vincular: sin recargar, ya llegan sus eventos.
+    window.addEventListener('agency:workers-changed', joinRooms);
     const off = subscribeAgencyEvents((event, payload) => {
       if (event === 'offer.accepted') {
         toast(`El cliente aceptó tu oferta${payload?.title ? ` para "${payload.title}"` : ''}.`);
@@ -53,6 +57,7 @@ function RealtimeBridge() {
     });
     return () => {
       active = false;
+      window.removeEventListener('agency:workers-changed', joinRooms);
       off();
     };
   }, [toast]);

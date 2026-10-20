@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -26,6 +27,15 @@ export default function Home() {
   const open = useLoad(() => getActiveJobs());
   const assigned = useLoad(() => getAssignedJobs());
   const workers = useLoad(() => getWorkers());
+
+  // Igual que Trabajos: un evento en tiempo real refresca el resumen del día.
+  const reloaders = [account.reload, payouts.reload, open.reload, assigned.reload, workers.reload];
+  useEffect(() => {
+    const handler = () => reloaders.forEach((reload) => reload(true));
+    window.addEventListener('agency:refresh', handler);
+    return () => window.removeEventListener('agency:refresh', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const running = (assigned.data ?? []).filter((j) => ['assigned', 'in_progress'].includes(j.status));
   const team = workers.data ?? [];

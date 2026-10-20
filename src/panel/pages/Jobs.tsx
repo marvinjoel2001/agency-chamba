@@ -342,14 +342,16 @@ function AssignSheet({
           <div className="ag-pick" role="radiogroup">
             {ordered.map((w) => {
               const name = fullName(w.firstName, w.lastName);
+              // Un trabajador atiende un trabajo a la vez: el backend rechaza al ocupado.
+              const unavailable = w.isBlocked || w.activeJobsCount > 0;
               return (
-                <label key={w.id} aria-disabled={w.isBlocked}>
+                <label key={w.id} aria-disabled={unavailable}>
                   <input
                     type="radio"
                     name="worker"
                     value={w.id}
                     checked={workerId === w.id}
-                    disabled={w.isBlocked}
+                    disabled={unavailable}
                     onChange={() => setWorkerId(w.id)}
                   />
                   <Avatar name={name} src={w.profilePhotoUrl} dot={w.isAvailable ? 'on' : 'idle'} />

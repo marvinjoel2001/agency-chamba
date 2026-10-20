@@ -41,8 +41,16 @@ export async function getWorkers(search?: string): Promise<AgencyWorker[]> {
   return data;
 }
 
-export async function linkWorker(email: string): Promise<AgencyWorker> {
-  const { data } = await api.post<AgencyWorker>('/agency/workers/link', { email });
+/**
+ * Vincular una cuenta existente pide el consentimiento del trabajador: sin
+ * código el backend le manda uno por notificación (`pending`); con el código
+ * que él te pasa, lo vincula y devuelve el trabajador.
+ */
+export async function linkWorker(
+  email: string,
+  code?: string,
+): Promise<AgencyWorker | { pending: true; expiresInMinutes: number }> {
+  const { data } = await api.post('/agency/workers/link', code ? { email, code } : { email });
   return data;
 }
 
