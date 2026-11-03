@@ -241,6 +241,9 @@ function AssignedRow({ job }: { job: AssignedJob }) {
   );
 }
 
+/** Solo se oferta con trabajadores verificados y sin bloqueo (el backend rechaza a los demás). */
+const cannotOffer = (w: AgencyWorker) => w.isBlocked || w.verificationStatus !== 'verified';
+
 function AssignSheet({
   job,
   workers,
@@ -259,14 +262,14 @@ function AssignSheet({
     () =>
       [...workers].sort(
         (a, b) =>
-          Number(a.isBlocked) - Number(b.isBlocked) ||
+          Number(cannotOffer(a)) - Number(cannotOffer(b)) ||
           a.activeJobsCount - b.activeJobsCount ||
           Number(b.isAvailable) - Number(a.isAvailable) ||
           b.averageRating - a.averageRating,
       ),
     [workers],
   );
-  const firstFree = ordered.find((w) => !w.isBlocked && w.activeJobsCount === 0);
+  const firstFree = ordered.find((w) => !cannotOffer(w) && w.activeJobsCount === 0);
   const [workerId, setWorkerId] = useState(firstFree?.id ?? '');
   const [amount, setAmount] = useState(String(job.budget || ''));
   const [message, setMessage] = useState('');
@@ -343,7 +346,7 @@ function AssignSheet({
             {ordered.map((w) => {
               const name = fullName(w.firstName, w.lastName);
               // Un trabajador atiende un trabajo a la vez: el backend rechaza al ocupado.
-              const unavailable = w.isBlocked || w.activeJobsCount > 0;
+              const unavailable = cannotOffer(w) || w.activeJobsCount > 0;
               return (
                 <label key={w.id} aria-disabled={unavailable}>
                   <input
@@ -360,7 +363,9 @@ function AssignSheet({
                     <span className="ag-hint">
                       {w.isBlocked
                         ? 'Bloqueado'
-                        : w.activeJobsCount > 0
+                        : w.verificationStatus !== 'verified'
+                          ? 'Falta verificar su identidad en la app'
+                          : w.activeJobsCount > 0
                           ? `Ocupado: ${w.activeJobsCount} en curso`
                           : w.skills.slice(0, 3).join(', ') || 'Libre'}
                     </span>
