@@ -17,6 +17,8 @@ interface AuthContextValue {
   agency: Agency | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  /** La agencia ya cambió la contraseña inicial: deja entrar al panel. */
+  markPasswordChanged: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -65,14 +67,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAgency(response.agency);
   }, []);
 
+  const markPasswordChanged = useCallback(() => {
+    setAgency((current) => {
+      if (!current) return current;
+      const updated = { ...current, mustChangePassword: false };
+      localStorage.setItem(AGENCY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  // Una sesión guardada de antes no sabe si la contraseña es la inicial: se
+  // pregunta al backend al abrir el panel.
+  useEffect(() => {
+    if (!token) return;
+    agencyApi
+      .getProfile()
+      .then((profile) => {
+        setAgency((current) => {
+          if (!current) return current;
+          const updated = {
+            ...current,
+            mustChangePassword: profile.mustChangePassword === true,
+          };
+          localStorage.setItem(AGENCY_KEY, JSON.stringify(updated));
+          return updated;
+        });
+      })
+      .catch(() => {
+        // El interceptor ya cierra la sesión si el token no sirve.
+      });
+  }, [token]);
+
   const value = useMemo(
     () => ({
       isAuthenticated: token !== null,
       agency,
       login,
       logout,
+      markPasswordChanged,
     }),
-    [token, agency, login, logout],
+    [token, agency, login, logout, markPasswordChanged],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
