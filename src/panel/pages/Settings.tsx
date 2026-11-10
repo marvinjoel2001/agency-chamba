@@ -183,13 +183,13 @@ export default function Settings() {
                   value={next}
                   onChange={(e) => setNext(e.target.value)}
                 />
-                <small>Mínimo 6 caracteres.</small>
+                <small>Mínimo 8 caracteres.</small>
               </label>
               {passError && <ErrorNote message={passError} />}
               <div>
                 <button
                   className="ag-btn ag-btn-quiet"
-                  disabled={!current || next.length < 6 || savingPass}
+                  disabled={!current || next.length < 8 || savingPass}
                   onClick={savePassword}
                 >
                   {savingPass ? 'Guardando…' : 'Cambiar contraseña'}

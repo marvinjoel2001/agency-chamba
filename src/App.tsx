@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Shell from './panel/Shell';
+import ForcePasswordChange from './panel/ForcePasswordChange';
 import Home from './panel/pages/Home';
 import Jobs from './panel/pages/Jobs';
 import Fleet from './panel/pages/Fleet';
@@ -13,8 +14,11 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
 const ProtectedShell = () => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Shell /> : <Navigate to="/login" replace />;
+  const { isAuthenticated, agency } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // Con la contraseña que le dio el admin, primero debe poner una propia.
+  if (agency?.mustChangePassword) return <ForcePasswordChange />;
+  return <Shell />;
 };
 
 // Rutas anteriores del panel, para enlaces guardados.

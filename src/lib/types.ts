@@ -4,6 +4,8 @@ export interface Agency {
   contactEmail: string;
   contactPhone: string | null;
   commissionRate: number;
+  /** Contraseña puesta por el admin: hay que cambiarla al entrar. */
+  mustChangePassword?: boolean;
 }
 
 export interface LoginResponse {
